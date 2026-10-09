@@ -1,0 +1,138 @@
+Build a beautiful, modern web application called **THE DETECTIVES** for our research project at Isomo Academy, Rwanda.
+
+The project is titled **“Redesigning Rwanda's Health Insurance.”**
+
+IMPORTANT: I have limited Replit Agent credits. Start coding immediately and produce a working visual preview as early as possible. Do not spend time writing a long plan, explaining your approach, or building the entire backend first. Prioritize excellent design and a functional first version.
+
+I have attached our 17-page research questionnaire PDF. Use it as the source of truth for the interview questions and answer choices.
+
+## 1. DESIGN DIRECTION — THIS IS VERY IMPORTANT
+
+I want this to look like a professionally designed civic-tech or research startup product, not a generic AI-generated website.
+
+Create a premium, polished, visually memorable interface with:
+
+- A sophisticated palette of midnight navy, royal blue, sky blue, and very pale blue.
+- Beautiful typography, strong visual hierarchy, generous whitespace, and carefully aligned sections.
+- A clean editorial-style layout, subtle gradients, elegant borders, restrained shadows, and refined hover effects.
+- A custom magnifying-glass logo containing an eye, representing The Detectives.
+- Beautiful, consistent icons and carefully designed buttons.
+- Smooth, subtle interactions without excessive animations.
+- A mobile-responsive layout.
+
+Avoid generic dashboard templates, excessive rounded cards, giant empty spaces, random gradients, emoji used as icons, tiny text, crowded layouts, and unnecessary decorative elements.
+
+Make thoughtful design decisions yourself. The result should look like a real product made by a skilled UI/UX designer.
+
+## 2. LANDING PAGE
+
+Create an impressive landing page with the following structure:
+
+**Navigation:** Logo and THE DETECTIVES on the left; Research, Start an Interview, and Admin Access on the right.
+
+**Hero section:** Display the research title, a compelling headline, a short description, and a prominent “Start an Interview” button. Include a custom, elegant visual representing investigation, healthcare, and research, using original SVG artwork or CSS illustrations.
+
+Use this exact research question:
+
+“How can we redesign Rwanda's health insurance system to serve every citizen and provide adequate financial protection?”
+
+**Research focus:** Present four clear areas:
+1. Ubudehe classification and fairness.
+2. CBHI members' healthcare experiences.
+3. Health insurance financing.
+4. How funding affects the services people receive.
+
+**Interview selection:** Create three attractive, clearly distinguished options:
+- Community / CBHI Members
+- MINALOC Officials
+- RSSB Officials
+
+Each option must lead to its own interview flow.
+
+**How it works:** Explain that our team interviews participants directly and records their answers. Participants do not fill in the website themselves.
+
+**About us:** Introduce The Detectives as a student research team at Isomo Academy.
+
+**Footer:** Include the team and contact details listed below.
+
+## 3. THE INTERVIEW EXPERIENCE
+
+When a researcher selects an interview type, open a beautifully designed, easy-to-use form.
+
+Our interviewers will ask questions verbally and enter the answers themselves.
+
+Use the attached PDF to implement the questionnaire. Preserve the original question wording, numbering, answer options, and conditional logic. Do not invent replacement questions.
+
+The questionnaire has three distinct paths:
+
+- CBHI community interviews.
+- MINALOC institutional interviews.
+- RSSB institutional interviews.
+
+Use appropriate radio buttons, checkboxes, number inputs, date pickers, and multiline text fields.
+
+Design the forms with clear section headings, readable question labels, a progress indicator, and Back and Continue buttons. Make them comfortable to use on a phone while interviewing someone in the field.
+
+Preserve the consent requirements, including ending the interview appropriately if consent is refused or a CBHI participant is under 18.
+
+For this first version, focus on the landing page, navigation, reusable form design, and working interview flows. Use temporary in-memory data if necessary for the preview, but keep the code organized so real Supabase storage can be added later. Never pretend that temporary data is permanently saved.
+
+## 4. ADMIN ACCESS AND DASHBOARD DESIGN
+
+Create an Admin Access link that opens a separate verification screen.
+
+The intended administrator is `lizzie.admin@dectives.org`. Later, this will use real Supabase email verification; do not treat simply entering this email as successful authentication.
+
+Design the dashboard with three tabs:
+- CBHI Responses
+- MINALOC Responses
+- RSSB Responses
+
+Include a compact overview of interview totals, a clean response table, and a readable detail view for individual interviews.
+
+Include a “Download Research Data” button designed for a future Excel workbook containing three separate worksheets.
+
+Use clearly labeled demonstration data only if needed to show the visual design. Never mix demonstration records with real research data.
+
+Do not spend credits building complex analytics yet. The dashboard's immediate priority is its visual design and navigation.
+
+## 5. TEAM AND CONTACT DETAILS
+
+Display:
+
+- Gislain Icyeza — President of The Detectives
+- Lizzie Ange Iteriteka 💗 — Manager and heart of The Detectives
+- Emerton Abudul Lazak
+- Mame Gideon
+- Denyse Mukeshimana
+
+Contacts:
+- icyezagislain@gmail.com
+- +250799659914
+
+Use a professional footer with clickable contact links.
+
+## 6. TECHNICAL REQUIREMENTS
+
+Use a lightweight, maintainable stack that can eventually be exported to GitHub and deployed to Vercel. Prefer Next.js, TypeScript, and Tailwind CSS if supported by the environment.
+
+Organize the code into reusable components and separate questionnaire definitions from the form interface.
+
+Do not build an unnecessarily complicated architecture. Do not install many dependencies.
+
+For this first stage:
+- Build the actual website and start the preview.
+- Make the navigation and three interview-selection options work.
+- Create the landing page, interview forms, admin verification screen, and dashboard interface.
+- Ensure the app compiles and runs.
+- Do not attempt to complete Supabase authentication, database migrations, advanced analytics, and Excel generation before I can see the design.
+
+Use environment-variable placeholders for future Supabase integration. Never put privileged database credentials in frontend code.
+
+## FINAL PRIORITY
+
+**Design quality first, working preview immediately, functionality next, backend integration afterward.**
+
+Do not stop after creating a plan. Do not return just a description or a mockup. Build the application files and launch the preview.
+
+If usage limits prevent completing everything, finish the landing page and a working interview-selection flow first. Keep the project easy to continue in a later session.

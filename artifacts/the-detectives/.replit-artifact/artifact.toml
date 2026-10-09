@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "The Detectives"
+description = "A civic research website for Isomo Academy's study on redesigning Rwanda's health insurance, with guided interviewer-led questionnaires for community, MINALOC, and RSSB participants."
+version = "1.0.0"
+id = "artifacts/the-detectives"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25218
+
+[services.development]
+run = "pnpm --filter @workspace/the-detectives run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/the-detectives", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/the-detectives/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25218"
+BASE_PATH = "/"
