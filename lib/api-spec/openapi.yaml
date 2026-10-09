@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: interviews
+    description: Authenticated interview drafts and submitted records
 paths:
   /healthz:
     get:
@@ -24,7 +26,175 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /session:
+    get:
+      operationId: getCurrentSession
+      tags: [interviews]
+      summary: Get the signed-in user's app role
+      responses:
+        "200":
+          description: Session information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /interviews:
+    get:
+      operationId: listInterviews
+      tags: [interviews]
+      summary: List records visible to the signed-in user
+      responses:
+        "200":
+          description: Interview records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createInterviewDraft
+      tags: [interviews]
+      summary: Create an interview draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInterviewRequest"
+      responses:
+        "201":
+          description: Draft created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /interviews/{respondentType}/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RespondentType"
+      - $ref: "#/components/parameters/InterviewId"
+    get:
+      operationId: getInterview
+      tags: [interviews]
+      summary: Retrieve an interview owned by the signed-in user
+      responses:
+        "200":
+          description: Interview record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewRecord"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateInterviewDraft
+      tags: [interviews]
+      summary: Save answers on an owned draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInterviewRequest"
+      responses:
+        "200":
+          description: Updated draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      operationId: deleteInterviewDraft
+      tags: [interviews]
+      summary: Delete an unconsented interview draft
+      responses:
+        "204":
+          description: Draft deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /interviews/{respondentType}/{id}/submit:
+    parameters:
+      - $ref: "#/components/parameters/RespondentType"
+      - $ref: "#/components/parameters/InterviewId"
+    post:
+      operationId: submitInterview
+      tags: [interviews]
+      summary: Validate and submit an owned interview
+      responses:
+        "200":
+          description: Submitted interview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 components:
+  parameters:
+    RespondentType:
+      name: respondentType
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/RespondentType"
+    InterviewId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Sign-in required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Record not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: The record can no longer be changed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +203,102 @@ components:
           type: string
       required:
         - status
+    RespondentType:
+      type: string
+      enum: [cbhi, minaloc, rssb]
+    InterviewStatus:
+      type: string
+      enum: [draft, submitted]
+    AnswerMap:
+      type: object
+      additionalProperties: true
+    CreateInterviewRequest:
+      type: object
+      properties:
+        respondentType:
+          $ref: "#/components/schemas/RespondentType"
+        answers:
+          $ref: "#/components/schemas/AnswerMap"
+        skippedQuestions:
+          type: array
+          items:
+            type: integer
+        activeQuestion:
+          type: integer
+          minimum: 1
+      required: [respondentType, answers, skippedQuestions, activeQuestion]
+    UpdateInterviewRequest:
+      type: object
+      properties:
+        answers:
+          $ref: "#/components/schemas/AnswerMap"
+        skippedQuestions:
+          type: array
+          items:
+            type: integer
+        activeQuestion:
+          type: integer
+          minimum: 1
+      required: [answers, skippedQuestions, activeQuestion]
+    InterviewRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        respondentType:
+          $ref: "#/components/schemas/RespondentType"
+        answers:
+          $ref: "#/components/schemas/AnswerMap"
+        skippedQuestions:
+          type: array
+          items:
+            type: integer
+        activeQuestion:
+          type: integer
+          nullable: true
+        status:
+          $ref: "#/components/schemas/InterviewStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - respondentType
+        - answers
+        - skippedQuestions
+        - activeQuestion
+        - status
+        - createdAt
+        - updatedAt
+        - submittedAt
+    InterviewListResponse:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterviewRecord"
+      required: [records]
+    SessionResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+        isAdmin:
+          type: boolean
+      required: [userId, isAdmin]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
 
