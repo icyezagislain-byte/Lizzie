@@ -54,7 +54,7 @@ const u: Question[] = [
   { n: 35, section: 'U4b', sectionTitle: 'Financial protection', prompt: 'Has the family ever delayed or skipped care because of cost or distance?', kind: 'radio', required: true, options: ['Yes', 'No'] },
   { n: 36, section: 'U4c', sectionTitle: 'Delayed or skipped care · only if Yes', prompt: 'What was the main reason?', kind: 'checkbox', required: true, options: ['Cost of treatment', 'Transport cost', 'Distance', 'Medicine unavailable', 'Lost income', 'Other'], branches: [{ question: 35, equals: 'Yes' }] },
   { n: 37, section: 'U4c', sectionTitle: 'Delayed or skipped care · only if Yes', prompt: 'What did the family do instead?', kind: 'textarea', required: true, branches: [{ question: 35, equals: 'Yes' }] },
-  { n: 38, section: 'U5', sectionTitle: 'Closing', prompt: 'What advice would the participant give to the people who run Mutuelle?', kind: 'textarea' },
+  { n: 38, section: 'U5', sectionTitle: 'Closing', prompt: 'What advice would the participant give to the people who run Mutuelle?', kind: 'textarea', required: true },
   { n: 39, section: 'U5', sectionTitle: 'Closing', prompt: 'Best quote (exact words, in Kinyarwanda and English)', kind: 'textarea', branches: [{ question: 8, equals: 'Yes' }] },
   { n: 40, section: 'U5', sectionTitle: 'Closing', prompt: "Interviewer's notes (setting, mood, anything unusual)", kind: 'textarea' },
   { n: 41, section: 'U5', sectionTitle: 'Closing', prompt: 'How comfortable did the participant seem during the interview?', kind: 'rating', required: true, options: ['Uncomfortable', 'Very comfortable'] },

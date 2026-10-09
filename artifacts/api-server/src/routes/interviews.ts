@@ -1,9 +1,7 @@
-import { clerkClient } from "@clerk/express";
 import {
   CreateInterviewDraftBody,
   CreateInterviewDraftResponse,
   DeleteInterviewDraftParams,
-  GetCurrentSessionResponse,
   GetInterviewParams,
   GetInterviewResponse,
   InterviewListResponse,
@@ -14,7 +12,7 @@ import {
   UpdateInterviewDraftParams,
   UpdateInterviewDraftResponse,
 } from "@workspace/api-zod";
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import {
   deleteInterviewRow,
   findInterviewRow,
@@ -26,9 +24,10 @@ import {
   type InterviewRow,
   type RespondentType,
 } from "../lib/supabase";
-import { requireSameOriginWrite, requireSignedIn } from "../middlewares/auth";
+import { requireSameOriginWrite } from "../middlewares/auth";
 
 const router: IRouter = Router();
+const PUBLIC_OWNER_ID = "public-fieldwork";
 const respondentTypeFromAnswer: Record<string, RespondentType> = {
   "CBHI member (community)": "cbhi",
   MINALOC: "minaloc",
@@ -37,7 +36,7 @@ const respondentTypeFromAnswer: Record<string, RespondentType> = {
 const requiredQuestions: Record<RespondentType, number[]> = {
   cbhi: [
     1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22,
-    25, 27, 28, 29, 30, 33, 34, 35, 41,
+    25, 27, 28, 29, 30, 33, 34, 35, 38, 41,
   ],
   minaloc: [
     1, 2, 3, 4, 5, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
@@ -49,11 +48,6 @@ const requiredQuestions: Record<RespondentType, number[]> = {
   ],
 };
 
-const adminCache = new Map<string, { value: boolean; expiresAt: number }>();
-
-function getUserId(res: Parameters<typeof requireSignedIn>[1]): string {
-  return String(res.locals.userId);
-}
 
 function isNonemptyAnswer(value: unknown): boolean {
   if (value === undefined || value === null || value === "") return false;
@@ -138,24 +132,6 @@ function parseAnswers(body: Record<string, unknown>): Record<string, unknown> {
   return body.answers as Record<string, unknown>;
 }
 
-async function isResearchAdmin(userId: string): Promise<boolean> {
-  const adminEmail = process.env.RESEARCH_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!adminEmail) return false;
-
-  const cached = adminCache.get(userId);
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
-
-  const user = await clerkClient.users.getUser(userId);
-  const email = user.emailAddresses.find(
-    (address) =>
-      address.id === user.primaryEmailAddressId &&
-      address.verification?.status === "verified",
-  )?.emailAddress;
-  const isAdmin = email?.trim().toLowerCase() === adminEmail;
-  adminCache.set(userId, { value: isAdmin, expiresAt: Date.now() + 60_000 });
-  return isAdmin;
-}
-
 function toResponseRecord(type: RespondentType, row: InterviewRow) {
   return {
     ...toInterviewRecord(type, row),
@@ -166,8 +142,8 @@ function toResponseRecord(type: RespondentType, row: InterviewRow) {
 }
 
 function sendStorageError(
-  req: Parameters<typeof requireSignedIn>[0],
-  res: Parameters<typeof requireSignedIn>[1],
+  req: Request,
+  res: Response,
   error: unknown,
 ): void {
   const status =
@@ -182,29 +158,13 @@ function sendStorageError(
   });
 }
 
-router.get("/session", requireSignedIn, async (req, res): Promise<void> => {
+router.get("/interviews", async (req, res): Promise<void> => {
   try {
-    const userId = getUserId(res);
-    const isAdmin = await isResearchAdmin(userId);
-    res.json(GetCurrentSessionResponse.parse({ userId, isAdmin }));
-  } catch (error) {
-    req.log?.error(
-      { errorKind: error instanceof Error ? error.name : "unknown" },
-      "Could not verify the app role",
-    );
-    res.status(503).json({ error: "Could not verify account permissions." });
-  }
-});
-
-router.get("/interviews", requireSignedIn, async (req, res): Promise<void> => {
-  try {
-    const userId = getUserId(res);
-    const isAdmin = await isResearchAdmin(userId);
     const types: RespondentType[] = ["cbhi", "minaloc", "rssb"];
     const groups = await Promise.all(
       types.map(async (type) => ({
         type,
-        rows: await listInterviewRows(type, isAdmin ? undefined : userId),
+        rows: await listInterviewRows(type),
       })),
     );
     const records = groups
@@ -221,7 +181,6 @@ router.get("/interviews", requireSignedIn, async (req, res): Promise<void> => {
 router.post(
   "/interviews",
   requireSameOriginWrite,
-  requireSignedIn,
   async (req, res): Promise<void> => {
     const parsed = CreateInterviewDraftBody.safeParse(req.body);
     if (!parsed.success) {
@@ -248,7 +207,7 @@ router.post(
 
     try {
       const row = await insertInterviewRow(respondentType, {
-        owner_user_id: getUserId(res),
+        owner_user_id: PUBLIC_OWNER_ID,
         interview_code: String(answers["1"]),
         answers: parseAnswers(parsed.data),
         skipped_questions: skippedQuestions,
@@ -269,7 +228,6 @@ router.post(
 
 router.get(
   "/interviews/:respondentType/:id",
-  requireSignedIn,
   async (req, res): Promise<void> => {
     const parsed = GetInterviewParams.safeParse(req.params);
     if (!parsed.success) {
@@ -280,14 +238,6 @@ router.get(
     try {
       const row = await findInterviewRow(respondentType, id);
       if (!row) {
-        res.status(404).json({ error: "Interview not found." });
-        return;
-      }
-      const userId = getUserId(res);
-      if (
-        row.owner_user_id !== userId &&
-        !(await isResearchAdmin(userId))
-      ) {
         res.status(404).json({ error: "Interview not found." });
         return;
       }
@@ -303,7 +253,6 @@ router.get(
 router.patch(
   "/interviews/:respondentType/:id",
   requireSameOriginWrite,
-  requireSignedIn,
   async (req, res): Promise<void> => {
     const params = UpdateInterviewDraftParams.safeParse(req.params);
     const body = UpdateInterviewDraftBody.safeParse(req.body);
@@ -321,9 +270,8 @@ router.patch(
     }
 
     try {
-      const userId = getUserId(res);
       const existing = await findInterviewRow(respondentType, id);
-      if (!existing || existing.owner_user_id !== userId) {
+      if (!existing) {
         res.status(404).json({ error: "Interview draft not found." });
         return;
       }
@@ -334,7 +282,7 @@ router.patch(
       const updated = await updateInterviewRow(
         respondentType,
         id,
-        userId,
+        existing.owner_user_id,
         {
           answers: parseAnswers(body.data),
           skipped_questions: skippedQuestions,
@@ -359,7 +307,6 @@ router.patch(
 router.delete(
   "/interviews/:respondentType/:id",
   requireSameOriginWrite,
-  requireSignedIn,
   async (req, res): Promise<void> => {
     const params = DeleteInterviewDraftParams.safeParse(req.params);
     if (!params.success) {
@@ -368,9 +315,8 @@ router.delete(
     }
     const { respondentType, id } = params.data;
     try {
-      const userId = getUserId(res);
       const existing = await findInterviewRow(respondentType, id);
-      if (!existing || existing.owner_user_id !== userId) {
+      if (!existing) {
         res.status(404).json({ error: "Interview draft not found." });
         return;
       }
@@ -378,7 +324,7 @@ router.delete(
         res.status(409).json({ error: "Submitted interviews cannot be deleted." });
         return;
       }
-      await deleteInterviewRow(respondentType, id, userId);
+      await deleteInterviewRow(respondentType, id, existing.owner_user_id);
       res.sendStatus(204);
     } catch (error) {
       sendStorageError(req, res, error);
@@ -389,7 +335,6 @@ router.delete(
 router.post(
   "/interviews/:respondentType/:id/submit",
   requireSameOriginWrite,
-  requireSignedIn,
   async (req, res): Promise<void> => {
     const params = SubmitInterviewParams.safeParse(req.params);
     if (!params.success) {
@@ -398,9 +343,8 @@ router.post(
     }
     const { respondentType, id } = params.data;
     try {
-      const userId = getUserId(res);
       const existing = await findInterviewRow(respondentType, id);
-      if (!existing || existing.owner_user_id !== userId) {
+      if (!existing) {
         res.status(404).json({ error: "Interview draft not found." });
         return;
       }
@@ -416,7 +360,7 @@ router.post(
       const updated = await updateInterviewRow(
         respondentType,
         id,
-        userId,
+        existing.owner_user_id,
         { status: "submitted", submitted_at: new Date().toISOString() },
       );
       if (!updated) {

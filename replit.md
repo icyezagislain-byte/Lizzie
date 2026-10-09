@@ -1,15 +1,19 @@
-# [Project name]
+# The Detectives
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Interviewer-led field research for “Redesigning Rwanda's Health Insurance,” with separate CBHI, MINALOC, and RSSB response tables.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `corepack pnpm install` — install dependencies. Do not use `npm run install`.
+- Replace the placeholder service-role key in the ignored `artifacts/api-server/.env` with a newly rotated key.
+- Apply `supabase/migrations/20261009_create_interview_tables.sql` in Supabase SQL Editor before saving records.
+- Run `corepack pnpm --filter @workspace/api-server run dev` and `corepack pnpm --filter @workspace/the-detectives run dev` in separate terminals.
+- `corepack pnpm run typecheck` — full typecheck across all packages.
+- `corepack pnpm run build` — typecheck + build all packages.
+- `corepack pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec.
+- See [SETUP.md](SETUP.md) for the non-developer step-by-step guide.
+
+Interview routes are public to anyone with the link. Response browsing requires the shared `ADMIN_ACCESS_CODE`, which is checked by the server and exchanged for a 12-hour signed session. The service-role key belongs only in the API server `.env`; never put it in a frontend variable or file. Anyone who learns the shared admin code can view all responses.
 
 ## Stack
 

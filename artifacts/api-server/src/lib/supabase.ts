@@ -82,9 +82,9 @@ export function toInterviewRecord(
     skippedQuestions: row.skipped_questions ?? [],
     activeQuestion: row.active_question,
     status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    submittedAt: row.submitted_at,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+    submittedAt: row.submitted_at ? new Date(row.submitted_at) : null,
   };
 }
 
