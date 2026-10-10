@@ -26,3 +26,17 @@ export const requireSameOriginWrite: RequestHandler = (req, res, next) => {
 
   next();
 };
+
+const ADMIN_WORDS = ["gislain", "lizzie"];
+
+export const requireAdminWord: RequestHandler = (req, res, next) => {
+  const header = req.get("authorization") ?? "";
+  const word = header.replace(/^Bearer\s+/i, "").trim().toLowerCase();
+  if (word && ADMIN_WORDS.includes(word)) {
+    next();
+    return;
+  }
+  res.status(403).json({
+    error: "Not allowed. Please go back and enter the correct secret word.",
+  });
+};

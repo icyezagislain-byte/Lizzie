@@ -24,7 +24,7 @@ import {
   type InterviewRow,
   type RespondentType,
 } from "../lib/supabase";
-import { requireSameOriginWrite } from "../middlewares/auth";
+import { requireAdminWord, requireSameOriginWrite } from "../middlewares/auth";
 
 const router: IRouter = Router();
 const PUBLIC_OWNER_ID = "public-fieldwork";
@@ -158,7 +158,7 @@ function sendStorageError(
   });
 }
 
-router.get("/interviews", async (req, res): Promise<void> => {
+router.get("/interviews", requireAdminWord, async (req, res): Promise<void> => {
   try {
     const types: RespondentType[] = ["cbhi", "minaloc", "rssb"];
     const groups = await Promise.all(
