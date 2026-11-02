@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/Brand";
 import { answersToRecord, friendlyError, interviewApi, recordToAnswers, type InterviewRecord, type RespondentType } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
 import {
   isVisible,
   questionnaire,
@@ -34,16 +35,18 @@ function Field({
   question,
   value,
   onChange,
+  t,
 }: {
   question: Question;
   value: unknown;
   onChange: (value: unknown) => void;
+  t: (text: string) => string;
 }) {
   const inputId = `answer-${question.n}`;
   if (question.kind === "radio")
     return (
       <fieldset className="choice-fields">
-        <legend className="sr-only">{question.prompt}</legend>
+        <legend className="sr-only">{t(question.prompt)}</legend>
         {question.options?.map((option, index) => (
           <label
             className={`answer-option ${value === option ? "selected" : ""}`}
@@ -60,7 +63,7 @@ function Field({
               data-testid={`input-answer-${question.n}-${index}`}
             />
             <span className="custom-radio" />
-            <span>{option}</span>
+            <span>{t(option)}</span>
           </label>
         ))}
       </fieldset>
@@ -69,7 +72,7 @@ function Field({
     const chosen = Array.isArray(value) ? (value as string[]) : [];
     return (
       <fieldset className="choice-fields">
-        <legend className="sr-only">{question.prompt}</legend>
+        <legend className="sr-only">{t(question.prompt)}</legend>
         {question.options?.map((option, index) => (
           <label
             className={`answer-option answer-check ${chosen.includes(option) ? "selected" : ""}`}
@@ -92,7 +95,7 @@ function Field({
             <span className="custom-check">
               {chosen.includes(option) && <Check size={12} />}
             </span>
-            <span>{option}</span>
+            <span>{t(option)}</span>
           </label>
         ))}
       </fieldset>
@@ -103,7 +106,7 @@ function Field({
       <div
         className="rating-options"
         role="radiogroup"
-        aria-label={question.prompt}
+        aria-label={t(question.prompt)}
       >
         {[1, 2, 3, 4, 5].map((number) => (
           <label
@@ -122,8 +125,8 @@ function Field({
           </label>
         ))}
         <div className="rating-ends">
-          <span>{question.options?.[0]}</span>
-          <span>{question.options?.[1]}</span>
+          <span>{t(question.options?.[0] ?? "")}</span>
+          <span>{t(question.options?.[1] ?? "")}</span>
         </div>
       </div>
     );
@@ -132,8 +135,8 @@ function Field({
       <div className="matrix-fields">
         {question.options?.map((row, index) => (
           <div className="matrix-row" key={row}>
-            <span>{row}</span>
-            <div className="matrix-scale" role="radiogroup" aria-label={row}>
+            <span>{t(row)}</span>
+            <div className="matrix-scale" role="radiogroup" aria-label={t(row)}>
               {[1, 2, 3, 4, 5].map((number) => (
                 <label
                   key={number}
@@ -166,8 +169,8 @@ function Field({
           </div>
         ))}
         <div className="matrix-head">
-          <span>1 = very poor</span>
-          <span>5 = very good</span>
+          <span>{t("1 = very poor")}</span>
+          <span>{t("5 = very good")}</span>
         </div>
       </div>
     );
@@ -175,23 +178,23 @@ function Field({
     return (
       <select
         id={inputId}
-        aria-label={question.prompt}
+        aria-label={t(question.prompt)}
         value={String(value ?? "")}
         onChange={(event) => onChange(event.target.value)}
         className="answer-input"
         data-testid={`input-answer-${question.n}`}
       >
-        <option value="">Choose an option</option>
+        <option value="">{t("Choose an option")}</option>
         {question.options?.map((option) => (
           <option key={option} value={option}>
-            {option}
+            {t(option)}
           </option>
         ))}
       </select>
     );
   const common = {
     id: inputId,
-    "aria-label": question.prompt,
+    "aria-label": t(question.prompt),
     value: String(value ?? ""),
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       onChange(event.target.value),
@@ -202,7 +205,7 @@ function Field({
       <textarea
         {...common}
         rows={5}
-        placeholder="Record the participant’s answer in their own words."
+        placeholder={t("Record the participant’s answer in their own words.")}
         className="answer-textarea"
       />
     );
@@ -225,12 +228,13 @@ function Field({
       {...common}
       type={question.kind === "url" ? "url" : "text"}
       pattern={question.n === 1 ? "^[UMR]-\\d{3}$" : undefined}
-      placeholder={question.n === 1 ? "U-001" : "Enter response"}
+      placeholder={question.n === 1 ? "U-001" : t("Enter response")}
       className="answer-input"
     />
   );
 }
 export default function Interview() {
+  const { language, t, questionText, sectionText } = useLanguage();
   const [, setLocation] = useLocation();
   const queryType =
     new URLSearchParams(window.location.search).get("type") || "";
@@ -247,6 +251,7 @@ export default function Interview() {
   const [stopped, setStopped] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [skipped, setSkipped] = useState<number[]>([]);
+  const [completedQuestions, setCompletedQuestions] = useState<number[]>([]);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [draftType, setDraftType] = useState<RespondentType | null>(null);
   const [saving, setSaving] = useState(false);
@@ -302,6 +307,13 @@ export default function Interview() {
     visibleQuestions.findIndex((question) => question.n === activeNumber),
   );
   const question = visibleQuestions[activeIndex] ?? visibleQuestions[0];
+  useEffect(() => {
+    if (activeNumber !== 1) {
+      document
+        .querySelector(`[data-testid="question-panel-${activeNumber}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [activeNumber]);
   const routeKey =
     selectedType === "MINALOC" ? "M" : selectedType === "RSSB" ? "R" : "U";
   const routePresentation =
@@ -330,6 +342,9 @@ export default function Interview() {
   const updateAnswer = (number: number, value: unknown) => {
     setAnswers((current) => ({ ...current, [number]: value }));
     setSkipped((current) => current.filter((item) => item !== number));
+    setCompletedQuestions((current) => current.filter((item) => item !== number));
+    const editedIndex = visibleQuestions.findIndex((item) => item.n === number);
+    if (editedIndex >= 0 && editedIndex < activeIndex) setActiveNumber(number);
     setError("");
   };
   const saveDraft = async (
@@ -453,6 +468,9 @@ export default function Interview() {
         setSaving(true);
         try {
           await saveDraft(nextPath[5]);
+          setCompletedQuestions((current) =>
+            current.includes(question.n) ? current : [...current, question.n],
+          );
           setActiveNumber(nextPath[5]);
           setLocation(`/interview?type=${encodeURIComponent(chosen)}`);
         } catch (requestError) {
@@ -476,12 +494,18 @@ export default function Interview() {
         }
         setSaving(false);
       }
+      setCompletedQuestions((current) =>
+        current.includes(question.n) ? current : [...current, question.n],
+      );
       setActiveNumber(nextQuestion.n);
       setError("");
     } else {
       setSaving(true);
       try {
         await submitDraft(answers, skipped, question.n);
+        setCompletedQuestions((current) =>
+          current.includes(question.n) ? current : [...current, question.n],
+        );
       } catch (requestError) {
         setError(friendlyError(requestError));
       } finally {
@@ -509,6 +533,9 @@ export default function Interview() {
       if (draftId && respondentType) {
         await saveDraft(nextQuestion?.n ?? question.n, answers, nextSkipped);
       }
+      setCompletedQuestions((current) =>
+        current.includes(question.n) ? current : [...current, question.n],
+      );
       if (nextQuestion) {
         setActiveNumber(nextQuestion.n);
         setError("");
@@ -538,6 +565,7 @@ export default function Interview() {
   const restart = () => {
     setAnswers({});
     setSkipped([]);
+    setCompletedQuestions([]);
     setActiveNumber(1);
     setError("");
     setStopped("");
@@ -547,9 +575,14 @@ export default function Interview() {
     setSaveStatus("");
     setLocation("/interview");
   };
-  const sectionChanged =
-    activeIndex === 0 ||
-    visibleQuestions[activeIndex - 1]?.section !== question?.section;
+  const displayError = (message: string) => {
+    if (language === "en") return message;
+    const numberError = /^Enter a number(?: from (\d+))?(?: to (\d+))?\.$/.exec(message);
+    if (numberError) {
+      return `Andika umubare${numberError[1] ? ` kuva kuri ${numberError[1]}` : ""}${numberError[2] ? ` kugeza kuri ${numberError[2]}` : ""}.`;
+    }
+    return t(message);
+  };
   return (
     <div className="site">
       <SiteHeader />
@@ -557,44 +590,46 @@ export default function Interview() {
         <div className="interview-shell">
           <div className="interview-topline">
             <Link href="/" className="back-home" data-testid="link-back-home">
-              <ArrowLeft size={15} /> Research home
+              <ArrowLeft size={15} /> {t("Research home")}
             </Link>
             <span>
-              <ClipboardList size={13} /> OPEN FIELDWORK
+              <ClipboardList size={13} /> {t("OPEN FIELDWORK")}
             </span>
           </div>
           <div className="interview-heading-block">
             <div>
               <p className="eyebrow">
                 <span className="eyebrow-line" />
-                {question?.n === 1 ? routePresentation.eyebrow : `INTERVIEWER-LED · ${pathName(selectedType).toUpperCase()}`}
+                {question?.n === 1
+                  ? t(routePresentation.eyebrow)
+                  : `${t("INTERVIEWER-LED")} · ${t(pathName(selectedType)).toUpperCase()}`}
               </p>
               <h1>
                 {submitted
-                  ? "Interview complete."
+                  ? t("Interview complete.")
                   : stopped
-                    ? "Interview ended."
+                  ? t("Interview ended.")
                     : question?.n === 1
-                      ? routePresentation.title
-                      : "Listen first."}
+                    ? t(routePresentation.title)
+                    : t("Listen first.")}
               </h1>
               <p>
                 {submitted
-                  ? "Thank you. The submitted interview is saved in the research database."
+                  ? t("Thank you. The submitted interview is saved in the research database.")
                   : stopped
-                    ? "The participant’s choice has been respected."
+                    ? t("The participant’s choice has been respected.")
                     : question?.n === 1
-                      ? routePresentation.summary
-                      : "Ask each question aloud and record the participant’s answer. They do not complete this form themselves."}
+                      ? t(routePresentation.summary)
+                      : t("Ask each question aloud and record the participant’s answer. They do not complete this form themselves.")}
               </p>
             </div>
             <div className="session-code">
               <ClipboardList size={18} />
               <span>
-                INTERVIEWER
+                {t("INTERVIEWER")}
                 <br />
                 <strong>
-                  {answers[1] ? String(answers[1]) : "NOT RECORDED"}
+                  {answers[1] ? String(answers[1]) : t("NOT RECORDED")}
                 </strong>
               </span>
             </div>
@@ -607,9 +642,9 @@ export default function Interview() {
               <div className="completion-icon">
                 <Check size={22} />
               </div>
-              <p className="eyebrow">END OF INTERVIEW</p>
-              <h2>Interview submitted.</h2>
-              <p>The Detectives, Isomo Academy.</p>
+              <p className="eyebrow">{t("END OF INTERVIEW")}</p>
+              <h2>{t("Interview submitted.")}</h2>
+              <p>{t("The Detectives, Isomo Academy.")}</p>
               <p>
                 The answers are saved in the research database and available
                 from the research dashboard.
@@ -620,14 +655,14 @@ export default function Interview() {
                   onClick={restart}
                   data-testid="button-new-interview"
                 >
-                  Start another interview <ArrowRight size={16} />
+                  {t("Start another interview")} <ArrowRight size={16} />
                 </button>
                 <Link
                   href="/"
                   className="button button-quiet"
                   data-testid="link-research-home"
                 >
-                  Return to research home
+                  {t("Return to research home")}
                 </Link>
               </div>
             </div>
@@ -635,16 +670,15 @@ export default function Interview() {
             <div className="stop-panel" data-testid="status-interview-stopped">
               <ShieldAlert size={28} />
               <div>
-                <p className="eyebrow">CONSENT PROTOCOL</p>
-                <h2>Stop here.</h2>
-                <p>{stopped}</p>
+                <p className="eyebrow">{t("CONSENT PROTOCOL")}</p>
+                <h2>{t("Stop here.")}</h2>
+                <p>{t(stopped)}</p>
                 <p className="stop-note">
-                  No further questions were asked. Do not record additional
-                  participant answers.
+                  {t("No further questions were asked. Do not record additional participant answers.")}
                 </p>
                 {error && (
                   <p className="field-error" role="alert">
-                    {error}
+                    {displayError(error)}
                   </p>
                 )}
               </div>
@@ -653,19 +687,19 @@ export default function Interview() {
                 onClick={restart}
                 data-testid="button-close-interview"
               >
-                Close interview
+                {t("Close interview")}
               </button>
             </div>
           ) : (
             <>
               <div className="progress-row">
                 <span>
-                  QUESTION {question?.n}{" "}
+                  {t("QUESTION")} {question?.n}{" "}
                   <span className="progress-muted">
-                    · STEP {activeIndex + 1} / {visibleQuestions.length}
+                    · {t("STEP")} {activeIndex + 1} / {visibleQuestions.length}
                   </span>
                 </span>
-                <span>{saving ? "SAVING…" : saveStatus || `${progress}% COMPLETE`}</span>
+                <span>{saving ? t("Saving…") : t(saveStatus) || `${progress}% ${t("COMPLETE")}`}</span>
               </div>
               <div
                 className="progress-track"
@@ -673,83 +707,118 @@ export default function Interview() {
                 aria-valuenow={progress}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label="Interview progress"
+                aria-label={t("Interview progress")}
               >
                 <span style={{ width: `${Math.max(progress, 3)}%` }} />
               </div>
-              <section
-                className="question-panel"
-                key={question?.n}
-                data-testid={`question-panel-${question?.n}`}
-              >
-                {question && (
-                  <>
-                    <div className="question-section-label">
-                      <span>{question.section}</span>
-                      <span>{question.sectionTitle}</span>
-                    </div>
-                    {sectionChanged && question.section === "U1" && (
-                      <div className="read-aloud">
-                        <CircleHelp size={16} />
-                        <p>
-                          <strong>Read aloud before continuing</strong>
-                          <br />
-                          “We are students from Isomo Academy studying how
-                          Mutuelle de Santé works for families, so we can
-                          suggest improvements. We are not from the government.
-                          There are no right or wrong answers. We will not write
-                          your name. You may skip any question or stop at any
-                          time. Your words may be used as an anonymous quote.”
-                        </p>
-                      </div>
-                    )}
-                    <div className="question-title-row">
-                      <span className="question-number">
-                        {String(question.n).padStart(2, "0")}
-                      </span>
-                      <div>
-                        <h2>
-                          {question.prompt}
-                          {question.required && (
-                            <span className="required-mark"> *</span>
-                          )}
-                        </h2>
-                        {question.help && (
-                          <p className="question-help">{question.help}</p>
-                        )}
-                        {question.n === 51 || question.n === 85 ? (
-                          <span className="key-tag">KEY QUESTION</span>
-                        ) : null}
-                        {skipped.includes(question.n) && (
-                          <p
-                            className="question-help"
-                            data-testid={`status-skipped-${question.n}`}
-                          >
-                            Skipped at the participant’s request. You can still
-                            record an answer.
+              <div className="question-list">
+                {visibleQuestions.map((item, index) => {
+                  const isActive = item.n === question?.n;
+                  const isComplete =
+                    completedQuestions.includes(item.n) || index < activeIndex;
+                  const sectionChanged =
+                    index === 0 ||
+                    visibleQuestions[index - 1]?.section !== item.section;
+                  return (
+                    <section
+                      className={`question-panel ${isActive ? "is-active" : ""}`}
+                      key={item.n}
+                      data-testid={`question-panel-${item.n}`}
+                    >
+                      {sectionChanged && (
+                        <div className="question-section-label">
+                          <span>{item.section}</span>
+                          <span>{sectionText(item.sectionTitle)}</span>
+                        </div>
+                      )}
+                      {sectionChanged && item.section === "U1" && (
+                        <div className="read-aloud">
+                          <CircleHelp size={16} />
+                          <p>
+                            <strong>{t("Read aloud before continuing")}</strong>
+                            <br />
+                            {language === "rw"
+                              ? "Turi abanyeshuri bo muri Isomo Academy turi gukora ubushakashatsi ku mikorere ya Mutuelle de Santé mu miryango, kugira ngo dutange ibitekerezo by'ibyayinoza. Ntabwo turi abakozi ba Leta. Nta gisubizo cyiza cyangwa kibi. Ntabwo tuzandika izina ryawe. Ushobora gusimbuka ikibazo icyo ari cyo cyose cyangwa guhagarika ikiganiro igihe icyo ari cyo cyose. Amagambo yawe ashobora gukoreshwa tutavuze izina ryawe."
+                              : "“We are students from Isomo Academy studying how Mutuelle de Santé works for families, so we can suggest improvements. We are not from the government. There are no right or wrong answers. We will not write your name. You may skip any question or stop at any time. Your words may be used as an anonymous quote.”"}
                           </p>
-                        )}
+                        </div>
+                      )}
+                      <div className="question-title-row">
+                        <span className="question-number">
+                          {String(item.n).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <h2>
+                            {questionText(item.n, item.prompt)}
+                            {item.required && (
+                              <span className="required-mark"> *</span>
+                            )}
+                          </h2>
+                          {item.help && (
+                            <p className="question-help">{t(item.help)}</p>
+                          )}
+                          {item.n === 51 || item.n === 85 ? (
+                            <span className="key-tag">{t("KEY QUESTION")}</span>
+                          ) : null}
+                          {skipped.includes(item.n) && (
+                            <p
+                              className="question-help"
+                              data-testid={`status-skipped-${item.n}`}
+                            >
+                              {t("Skipped at the participant’s request. You can still record an answer.")}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="question-field">
-                      <Field
-                        question={question}
-                        value={answers[question.n]}
-                        onChange={(value) => updateAnswer(question.n, value)}
-                      />
-                    </div>
-                    {error && (
-                      <p
-                        className="field-error"
-                        role="alert"
-                        data-testid="status-validation-error"
-                      >
-                        {error}
-                      </p>
-                    )}
-                  </>
-                )}
-              </section>
+                      <div className="question-field">
+                        <Field
+                          question={item}
+                          value={answers[item.n]}
+                          onChange={(value) => updateAnswer(item.n, value)}
+                          t={t}
+                        />
+                      </div>
+                      {error && isActive && (
+                        <p
+                          className="field-error"
+                          role="alert"
+                          data-testid="status-validation-error"
+                        >
+                          {displayError(error)}
+                        </p>
+                      )}
+                      <div className="question-card-actions">
+                        {isActive && ![1, 2, 3, 4, 5].includes(item.n) && (
+                          <button
+                            className="button button-quiet"
+                            onClick={skipQuestion}
+                            disabled={actionsDisabled}
+                            data-testid="button-skip"
+                          >
+                            {t("Skip question")}
+                          </button>
+                        )}
+                        <button
+                          className={`question-save-button ${isComplete ? "is-complete" : ""}`}
+                          onClick={next}
+                          disabled={actionsDisabled || !isActive}
+                          aria-label={`${t(isComplete ? "Completed" : "Save and continue")}: ${questionText(item.n, item.prompt)}`}
+                          data-testid={`button-save-question-${item.n}`}
+                        >
+                          <Check size={17} />
+                          <span>
+                            {isComplete
+                              ? "Saved"
+                              : item.n === 41 || item.n === 71 || item.n === 102
+                                ? t("Submit interview")
+                                    : t("Save & next")}
+                          </span>
+                        </button>
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
               <div className="interview-actions">
                 <button
                   className="button button-quiet"
@@ -757,42 +826,13 @@ export default function Interview() {
                   disabled={actionsDisabled}
                   data-testid="button-back"
                 >
-                  <ChevronLeft size={17} /> Back
+                  <ChevronLeft size={17} /> {t("Back")}
                 </button>
-                <div
-                  className={`interview-action-right ${[1, 2, 3, 4, 5].includes(question?.n ?? -1) ? "single-action" : ""}`}
-                >
-                  {![1, 2, 3, 4, 5].includes(question?.n ?? -1) && (
-                    <button
-                      className="button button-quiet"
-                      onClick={skipQuestion}
-                      disabled={actionsDisabled}
-                      data-testid="button-skip"
-                    >
-                      Skip question
-                    </button>
-                  )}
-                  <button
-                    className="button button-primary"
-                    onClick={next}
-                    disabled={actionsDisabled}
-                    data-testid="button-continue"
-                  >
-                    {question?.n === 41 ||
-                    question?.n === 71 ||
-                    question?.n === 102
-                      ? "Submit interview"
-                      : "Continue"}{" "}
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
               </div>
               <div className="interview-disclaimer">
                 <ShieldAlert size={15} />
                 <span>
-                  Drafts save securely when you continue and are submitted only
-                  at the end. Do not enter participant names, phone numbers or
-                  email addresses.
+                  {t("Use each red tick to save your answer and move to the next question. Saved steps turn green. Do not enter participant names, phone numbers or email addresses.")}
                 </span>
               </div>
             </>

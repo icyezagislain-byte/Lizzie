@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { SiteHeader } from "@/components/Brand";
+import { useLanguage } from "@/lib/i18n";
 import {
   friendlyError,
   interviewApi,
@@ -19,6 +20,7 @@ import {
 } from "@/lib/api";
 import { questionnaire, respondentPaths } from "@/lib/questionnaire";
 const tabs = ["CBHI", "MINALOC", "RSSB"];
+const chartColors = ["#2f6792", "#56a2bf", "#7aa88d", "#d9a85b", "#9d83b6", "#d07869"];
 const demo = [
   {
     id: "U-014",
@@ -58,6 +60,7 @@ const demo = [
   },
 ];
 function DemoDashboard() {
+  const { t } = useLanguage();
   const [tab, setTab] = useState("CBHI");
   const [selected, setSelected] = useState<(typeof demo)[number] | null>(null);
   const [search, setSearch] = useState("");
@@ -79,66 +82,65 @@ function DemoDashboard() {
               className="back-home"
               data-testid="link-dashboard-back"
             >
-              <ArrowLeft size={15} /> Admin access
+              <ArrowLeft size={15} /> {t("Admin access")}
             </Link>
             <span className="dashboard-demo-label">
-              <ShieldAlert size={15} /> DEMONSTRATION DATA ONLY
+              <ShieldAlert size={15} /> {t("DEMONSTRATION DATA ONLY")}
             </span>
           </div>
           <div className="dashboard-title-row">
             <div>
               <p className="eyebrow">
                 <span className="eyebrow-line" />
-                RESEARCH TEAM · PREVIEW ONLY
+                {t("RESEARCH TEAM · PREVIEW ONLY")}
               </p>
-              <h1>Response overview</h1>
+              <h1>{t("Response overview")}</h1>
               <p>
-                Visual preview of how the research dashboard could be organized.
+                {t("Visual preview of how the research dashboard could be organized.")}
               </p>
             </div>
             <button
               className="button button-outline"
               disabled
-              title="Excel download will be available when secure data storage is configured"
+              title={t("Excel download will be available when secure data storage is configured")}
               data-testid="button-download-disabled"
             >
-              <Download size={16} /> Download research data{" "}
-              <span className="coming-soon">FUTURE</span>
+              <Download size={16} /> {t("Download research data")}{" "}
+              <span className="coming-soon">{t("FUTURE")}</span>
             </button>
           </div>
           <div className="demo-warning">
             <ShieldAlert size={18} />
             <p>
-              <strong>DEMONSTRATION ONLY — not research data.</strong> These
-              invented sample records are included only to show the interface.
-              No participant responses are available here.
+              <strong>{t("DEMONSTRATION ONLY — not research data.")}</strong>{" "}
+              {t("These invented sample records are included only to show the interface. No participant responses are available here.")}
             </p>
           </div>
           <section className="overview-strip">
             <div>
-              <span>INTERVIEWS IN THIS DEMO</span>
+              <span>{t("INTERVIEWS IN THIS DEMO")}</span>
               <strong>04</strong>
-              <small>sample records only</small>
+              <small>{t("sample records only")}</small>
             </div>
             <div>
-              <span>CBHI SAMPLE</span>
+              <span>{t("CBHI SAMPLE")}</span>
               <strong>02</strong>
-              <small>demonstration records</small>
+              <small>{t("demonstration records")}</small>
             </div>
             <div>
-              <span>INSTITUTIONAL SAMPLES</span>
+              <span>{t("INSTITUTIONAL SAMPLES")}</span>
               <strong>02</strong>
               <small>MINALOC + RSSB</small>
             </div>
             <div className="overview-secure">
               <Users size={19} />
-              <span>No live data connected</span>
+              <span>{t("No live data connected")}</span>
             </div>
           </section>
           <div
             className="dashboard-tabs"
             role="tablist"
-            aria-label="Response groups"
+            aria-label={t("Response groups")}
           >
             {tabs.map((group) => (
               <button
@@ -152,23 +154,23 @@ function DemoDashboard() {
                 aria-selected={tab === group}
                 data-testid={`tab-${group.toLowerCase()}`}
               >
-                {group} Responses <span>{group === "CBHI" ? "02" : "01"}</span>
+                {group} {t("Responses")} <span>{group === "CBHI" ? "02" : "01"}</span>
               </button>
             ))}
           </div>
           <section className="response-panel">
             <div className="response-panel-head">
               <div>
-                <span className="panel-overline">{tab} · RESPONSE LOG</span>
-                <h2>Interview records</h2>
+                <span className="panel-overline">{tab} · {t("RESPONSE LOG")}</span>
+                <h2>{t("Interview records")}</h2>
               </div>
               <label className="table-search">
                 <Search size={15} />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Find an ID or interviewer"
-                  aria-label="Search demonstration responses"
+                  placeholder={t("Find an ID or interviewer")}
+                  aria-label={t("Search demonstration responses")}
                   data-testid="input-search-responses"
                 />
               </label>
@@ -177,10 +179,10 @@ function DemoDashboard() {
               <table>
                 <thead>
                   <tr>
-                    <th>INTERVIEW ID</th>
-                    <th>DATE</th>
-                    <th>INTERVIEWER</th>
-                    <th>RECORD TYPE</th>
+                    <th>{t("INTERVIEW ID")}</th>
+                    <th>{t("DATE")}</th>
+                    <th>{t("INTERVIEWER")}</th>
+                    <th>{t("RECORD TYPE")}</th>
                     <th />
                   </tr>
                 </thead>
@@ -194,12 +196,12 @@ function DemoDashboard() {
                     >
                       <td>
                         <strong>{row.id}</strong>
-                        <span className="table-demo-tag">DEMO</span>
+                        <span className="table-demo-tag">{t("DEMO")}</span>
                       </td>
                       <td>{row.date}</td>
                       <td>{row.interviewer}</td>
                       <td>
-                        <span className="record-type">{row.note}</span>
+                        <span className="record-type">{t(row.note)}</span>
                       </td>
                       <td>
                         <button
@@ -207,7 +209,7 @@ function DemoDashboard() {
                             event.stopPropagation();
                             setSelected(row);
                           }}
-                          aria-label={`View demonstration record ${row.id}`}
+                          aria-label={`${t("View demonstration record")} ${row.id}`}
                           className="row-open"
                           data-testid={`button-view-${row.id}`}
                         >
@@ -219,7 +221,7 @@ function DemoDashboard() {
                   {rows.length === 0 && (
                     <tr>
                       <td colSpan={5} className="no-results">
-                        No demonstration records match “{search}”.
+                        {t("No demonstration records match")} “{search}”.
                       </td>
                     </tr>
                   )}
@@ -227,8 +229,8 @@ function DemoDashboard() {
               </table>
             </div>
             <div className="panel-footer">
-              <span>Showing demonstration records for {tab}</span>
-              <span>Sample data · never research data</span>
+              <span>{t("Showing demonstration records for")} {tab}</span>
+              <span>{t("Sample data · never research data")}</span>
             </div>
           </section>
           {selected && (
@@ -239,14 +241,14 @@ function DemoDashboard() {
               <div className="detail-head">
                 <div>
                   <span className="panel-overline">
-                    DEMONSTRATION RECORD · {selected.id}
+                    {t("DEMONSTRATION RECORD")} · {selected.id}
                   </span>
-                  <h2>Interview detail</h2>
+                  <h2>{t("Interview detail")}</h2>
                 </div>
                 <button
                   onClick={() => setSelected(null)}
                   className="close-detail"
-                  aria-label="Close record detail"
+                  aria-label={t("Close record detail")}
                   data-testid="button-close-detail"
                 >
                   <X size={18} />
@@ -254,35 +256,33 @@ function DemoDashboard() {
               </div>
               <div className="detail-grid">
                 <div>
-                  <span>INTERVIEWER</span>
+                  <span>{t("INTERVIEWER")}</span>
                   <strong>{selected.interviewer}</strong>
                 </div>
                 <div>
-                  <span>DATE</span>
+                  <span>{t("DATE")}</span>
                   <strong>{selected.date}</strong>
                 </div>
                 <div>
-                  <span>PARTICIPANT PATH</span>
+                  <span>{t("PARTICIPANT PATH")}</span>
                   <strong>
                     {selected.group === "CBHI"
-                      ? "Community / CBHI"
-                      : `${selected.group} official`}
+                      ? t("Community / CBHI")
+                      : `${selected.group} ${t("official")}`}
                   </strong>
                 </div>
               </div>
               <div className="detail-summary">
-                <span>DEMONSTRATION SUMMARY</span>
-                <p>{selected.summary}</p>
+                <span>{t("DEMONSTRATION SUMMARY")}</span>
+                <p>{t(selected.summary)}</p>
               </div>
             </section>
           )}
           <div className="dashboard-bottom-note">
             <FileSpreadsheet size={18} />
             <p>
-              <strong>Excel export is a future feature.</strong> When
-              implemented, it is intended to provide three separate
-              worksheets—CBHI, MINALOC and RSSB. No workbook is generated in
-              this preview.
+              <strong>{t("Excel export is a future feature.")}</strong>{" "}
+              {t("When implemented, it is intended to provide three separate worksheets—CBHI, MINALOC and RSSB. No workbook is generated in this preview.")}
             </p>
           </div>
         </div>
@@ -297,11 +297,18 @@ const liveTabs: { type: RespondentType; label: string; path: string }[] = [
   { type: "rssb", label: "RSSB", path: "RSSB" },
 ];
 
-function answerText(value: unknown): string {
+function answerText(
+  value: unknown,
+  translate: (text: string) => string = (text) => text,
+): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (Array.isArray(value)) return value.map(String).join(", ");
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+  if (Array.isArray(value))
+    return value.map((item) => translate(String(item))).join(", ");
+  if (typeof value === "object")
+    return Object.entries(value)
+      .map(([key, item]) => `${translate(key)}: ${translate(String(item))}`)
+      .join(", ");
+  return translate(String(value));
 }
 
 function displayDate(value: string): string {
@@ -309,7 +316,76 @@ function displayDate(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
 }
 
+function hasAnswer(value: unknown): boolean {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === "object") return Object.keys(value).length > 0;
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function percentage(value: number, total: number): number {
+  return total ? Math.round((value / total) * 100) : 0;
+}
+
+function AnalyticsPieCard({
+  title,
+  data,
+  emptyText,
+  responsesText,
+}: {
+  title: string;
+  data: { name: string; value: number; fill: string }[];
+  emptyText: string;
+  responsesText: string;
+}) {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  let accumulated = 0;
+  const gradient = data
+    .map((item) => {
+      const start = (accumulated / total) * 100;
+      accumulated += item.value;
+      const end = (accumulated / total) * 100;
+      return `${item.fill} ${start}% ${end}%`;
+    })
+    .join(", ");
+
+  return (
+    <article className="analytics-pie-card">
+      <h3>{title}</h3>
+      {total ? (
+        <div className="analytics-pie-content">
+          <div className="analytics-pie-chart">
+            <div
+              className="analytics-pie-donut"
+              role="img"
+              aria-label={`${title}: ${data.map((item) => `${item.name}, ${item.value} ${responsesText}, ${percentage(item.value, total)}%`).join("; ")}`}
+              style={{ background: `conic-gradient(${gradient})` }}
+            >
+              <strong className="analytics-pie-total">{total}</strong>
+            </div>
+          </div>
+          <ul className="analytics-legend">
+            {data.map((item) => (
+              <li key={item.name}>
+                <span className="analytics-legend-name">
+                  <i style={{ backgroundColor: item.fill }} />
+                  {item.name}
+                </span>
+                <span>
+                  {item.value} <small>{percentage(item.value, total)}%</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="analytics-empty">{emptyText}</p>
+      )}
+    </article>
+  );
+}
+
 export default function Dashboard() {
+  const { t, questionText } = useLanguage();
   const [tab, setTab] = useState<RespondentType>("cbhi");
   const [records, setRecords] = useState<InterviewRecord[]>([]);
   const [selected, setSelected] = useState<InterviewRecord | null>(null);
@@ -354,6 +430,117 @@ export default function Dashboard() {
     (record) => record.status === "submitted",
   ).length;
   const selectedTab = liveTabs.find((item) => item.type === tab)!;
+  const tabRecords = records.filter((record) => record.respondentType === tab);
+  const statusChart = [
+    { name: t("Submitted"), value: submitted, fill: chartColors[0] },
+    { name: t("Draft"), value: drafts, fill: chartColors[3] },
+  ].filter((item) => item.value > 0);
+  const groupChart = liveTabs
+    .map((item, index) => ({
+      name: item.label,
+      value: countFor(item.type),
+      fill: chartColors[index],
+    }))
+    .filter((item) => item.value > 0);
+  const analysisQuestions = questionnaire
+    .filter(
+      (question) =>
+        respondentPaths[selectedTab.path].includes(question.n) &&
+        ["radio", "select", "checkbox", "rating"].includes(question.kind),
+    )
+    .map((question) => {
+      const counts = new Map<string, number>();
+      const answeredRecords = tabRecords.filter((record) =>
+        hasAnswer(record.answers[String(question.n)]),
+      );
+      for (const record of answeredRecords) {
+        const answer = record.answers[String(question.n)];
+        const selectedAnswers = Array.isArray(answer) ? answer : [answer];
+        for (const selectedAnswer of selectedAnswers) {
+          const value = String(selectedAnswer);
+          counts.set(value, (counts.get(value) ?? 0) + 1);
+        }
+      }
+      const options =
+        question.kind === "rating"
+          ? ["1", "2", "3", "4", "5"]
+          : question.options ?? [];
+      const optionValues = [...options, ...counts.keys()].filter(
+        (value, index, values) => values.indexOf(value) === index,
+      );
+      return {
+        question,
+        total: answeredRecords.length,
+        entries: optionValues.map((value, index) => ({
+          label: t(value),
+          count: counts.get(value) ?? 0,
+          percentage: percentage(counts.get(value) ?? 0, answeredRecords.length),
+          color: chartColors[index % chartColors.length],
+        })),
+      };
+    });
+  const numericInsights = questionnaire
+    .filter(
+      (question) =>
+        question.kind === "number" &&
+        respondentPaths[selectedTab.path].includes(question.n),
+    )
+    .map((question) => {
+      const values = tabRecords
+        .map((record) => {
+          const answer = record.answers[String(question.n)];
+          if (!hasAnswer(answer)) return null;
+          const value = Number(answer);
+          return Number.isFinite(value) ? value : null;
+        })
+        .filter((value): value is number => value !== null)
+        .sort((left, right) => left - right);
+      const middle = Math.floor(values.length / 2);
+      const median = values.length
+        ? values.length % 2
+          ? values[middle]
+          : (values[middle - 1] + values[middle]) / 2
+        : null;
+      return {
+        question,
+        count: values.length,
+        mean: values.length
+          ? values.reduce((sum, value) => sum + value, 0) / values.length
+          : null,
+        median,
+        min: values[0],
+        max: values[values.length - 1],
+      };
+    })
+    .filter((insight) => insight.count > 0);
+  const matrixInsights = questionnaire
+    .filter(
+      (question) =>
+        question.kind === "matrix" &&
+        respondentPaths[selectedTab.path].includes(question.n),
+    )
+    .flatMap((question) =>
+      (question.options ?? []).map((row) => {
+        const values = tabRecords
+          .map((record) => {
+            const answer = record.answers[String(question.n)];
+            if (!answer || typeof answer !== "object" || Array.isArray(answer))
+              return null;
+            const value = Number((answer as Record<string, unknown>)[row]);
+            return Number.isFinite(value) && value > 0 ? value : null;
+          })
+          .filter((value): value is number => value !== null);
+        return {
+          question,
+          row,
+          count: values.length,
+          mean: values.length
+            ? values.reduce((sum, value) => sum + value, 0) / values.length
+            : null,
+        };
+      }),
+    )
+    .filter((insight) => insight.count > 0);
 
   const downloadWorkbook = async () => {
     setExporting(true);
@@ -426,11 +613,11 @@ export default function Dashboard() {
               className="back-home"
               data-testid="link-dashboard-back"
             >
-              <ArrowLeft size={15} /> Research home
+              <ArrowLeft size={15} /> {t("Research home")}
             </Link>
             <div className="dashboard-tools">
               <span className="dashboard-live-label">
-                <ShieldAlert size={15} /> RESEARCH RESPONSE DATA
+                <ShieldAlert size={15} /> {t("RESEARCH RESPONSE DATA")}
               </span>
             </div>
           </div>
@@ -438,10 +625,10 @@ export default function Dashboard() {
             <div>
               <p className="eyebrow">
                 <span className="eyebrow-line" />
-                RESEARCH TEAM · LIVE DATA
+                {t("RESEARCH TEAM · LIVE DATA")}
               </p>
-              <h1>Response overview</h1>
-              <p>Submitted interviews and drafts in the research database.</p>
+              <h1>{t("Response overview")}</h1>
+              <p>{t("Submitted interviews and drafts in the research database.")}</p>
             </div>
             <button
               className="button button-outline"
@@ -450,41 +637,41 @@ export default function Dashboard() {
               data-testid="button-download-workbook"
             >
               <Download size={16} />{" "}
-              {exporting ? "Preparing workbook…" : "Download research data"}{" "}
+              {exporting ? t("Preparing workbook…") : t("Download research data")}{" "}
               <span className="coming-soon">XLSX</span>
             </button>
           </div>
           {error && (
             <div className="demo-warning" role="alert">
               <ShieldAlert size={18} />
-              <p>{error}</p>
+              <p>{t(error)}</p>
             </div>
           )}
           <section className="overview-strip">
             <div>
-              <span>TOTAL INTERVIEWS</span>
+              <span>{t("TOTAL INTERVIEWS")}</span>
               <strong>{records.length}</strong>
-              <small>all respondent groups</small>
+              <small>{t("all respondent groups")}</small>
             </div>
             <div>
-              <span>DRAFTS</span>
+              <span>{t("DRAFTS")}</span>
               <strong>{drafts}</strong>
-              <small>not yet submitted</small>
+              <small>{t("not yet submitted")}</small>
             </div>
             <div>
-              <span>SUBMITTED</span>
+              <span>{t("SUBMITTED")}</span>
               <strong>{submitted}</strong>
-              <small>completed interviews</small>
+              <small>{t("completed interviews")}</small>
             </div>
             <div className="overview-secure">
               <Users size={19} />
-              <span>Public response access</span>
+              <span>{t("Public response access")}</span>
             </div>
           </section>
           <div
             className="dashboard-tabs"
             role="tablist"
-            aria-label="Response groups"
+            aria-label={t("Response groups")}
           >
             {liveTabs.map((item) => (
               <button
@@ -498,25 +685,182 @@ export default function Dashboard() {
                 aria-selected={tab === item.type}
                 data-testid={`tab-${item.label.toLowerCase()}`}
               >
-                {item.label} Responses <span>{countFor(item.type)}</span>
+                {item.label} {t("Responses")} <span>{countFor(item.type)}</span>
               </button>
             ))}
           </div>
+          <section className="analytics-section" aria-labelledby="analytics-title">
+            <div className="analytics-heading">
+              <div>
+                <span className="panel-overline">
+                  <Users size={13} /> {t("LIVE RESPONSE ANALYSIS")}
+                </span>
+                <h2 id="analytics-title">{t("Response analysis")}</h2>
+                <p>
+                  {t("Charts include saved answers from drafts and submitted interviews.")}
+                </p>
+              </div>
+              <span className="analytics-scope">
+                {t("all respondent groups")} · {records.length} {t("interviews")}
+              </span>
+            </div>
+            {loading ? (
+              <p className="analytics-empty">{t("Loading research responses…")}</p>
+            ) : error ? (
+              <p className="analytics-empty" role="status">
+                {t("Analysis is unavailable until response data loads successfully.")}
+              </p>
+            ) : (
+              <>
+                <div className="analytics-overview">
+                  <AnalyticsPieCard
+                    title={t("Submission status")}
+                    data={statusChart}
+                    emptyText={t("No interviews available yet.")}
+                    responsesText={t("responses")}
+                  />
+                  <AnalyticsPieCard
+                    title={t("Respondent groups")}
+                    data={groupChart}
+                    emptyText={t("No interviews available yet.")}
+                    responsesText={t("responses")}
+                  />
+                  <article className="analytics-rate-card">
+                    <span>{t("SUBMISSION RATE")}</span>
+                    <strong>
+                      {records.length
+                        ? `${percentage(submitted, records.length)}%`
+                        : "—"}
+                    </strong>
+                    <small>
+                      {submitted} {t("submitted out of")} {records.length}{" "}
+                      {t("interviews")}
+                    </small>
+                  </article>
+                </div>
+                <div className="analytics-results-heading">
+                  <div>
+                    <h3>{t("Answer breakdowns")}</h3>
+                    <p>
+                      {t("Percentages use the number of people who answered each question.")}
+                    </p>
+                  </div>
+                  <span>
+                    {selectedTab.label} · {analysisQuestions.length} {t("questions")}
+                  </span>
+                </div>
+                {analysisQuestions.length ? (
+                  <div className="analytics-question-grid">
+                    {analysisQuestions.map(({ question, total, entries }) => (
+                      <article
+                        className="analytics-question-card"
+                        key={question.n}
+                      >
+                        <div className="analytics-question-heading">
+                          <span>Q{question.n}</span>
+                          <small>
+                            {total} {t("answered")}
+                          </small>
+                        </div>
+                        <h4>{questionText(question.n, question.prompt)}</h4>
+                        {total ? (
+                          <ul className="analytics-bars">
+                            {entries.map((entry) => (
+                              <li key={entry.label}>
+                                <div className="analytics-bar-heading">
+                                  <span>{entry.label}</span>
+                                  <small>
+                                    {entry.count} · {entry.percentage}%
+                                  </small>
+                                </div>
+                                <div
+                                  className="analytics-bar-track"
+                                  role="img"
+                                  aria-label={`${entry.label}: ${entry.count} ${t("responses")}, ${entry.percentage}%`}
+                                >
+                                  <span
+                                    style={{
+                                      width: `${entry.percentage}%`,
+                                      backgroundColor: entry.color,
+                                    }}
+                                  />
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="analytics-empty">
+                            {t("No answers recorded for this question yet.")}
+                          </p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="analytics-empty">
+                    {t("No categorical questions are available for this group.")}
+                  </p>
+                )}
+                {(numericInsights.length > 0 || matrixInsights.length > 0) && (
+                  <div className="analytics-statistics">
+                    {numericInsights.map((insight) => (
+                      <article className="analytics-stat-card" key={insight.question.n}>
+                        <span>Q{insight.question.n} · {t("NUMERIC SUMMARY")}</span>
+                        <h4>{questionText(insight.question.n, insight.question.prompt)}</h4>
+                        <div className="analytics-stat-values">
+                          <p>
+                            <strong>{insight.mean?.toFixed(1)}</strong>
+                            <small>{t("mean")}</small>
+                          </p>
+                          <p>
+                            <strong>{insight.median?.toFixed(1)}</strong>
+                            <small>{t("median")}</small>
+                          </p>
+                          <p>
+                            <strong>{insight.min}–{insight.max}</strong>
+                            <small>{t("range")}</small>
+                          </p>
+                          <p>
+                            <strong>{insight.count}</strong>
+                            <small>{t("answers")}</small>
+                          </p>
+                        </div>
+                      </article>
+                    ))}
+                    {matrixInsights.map((insight) => (
+                      <article
+                        className="analytics-stat-card"
+                        key={`${insight.question.n}-${insight.row}`}
+                      >
+                        <span>Q{insight.question.n} · {t("AVERAGE RATING")}</span>
+                        <h4>{questionText(insight.question.n, insight.question.prompt)}</h4>
+                        <div className="analytics-matrix-result">
+                          <span>{t(insight.row)}</span>
+                          <strong>{insight.mean?.toFixed(1)} / 5</strong>
+                          <small>{insight.count} {t("ratings")}</small>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </section>
           <section className="response-panel">
             <div className="response-panel-head">
               <div>
                 <span className="panel-overline">
-                  {selectedTab.label} · RESPONSE LOG
+                  {selectedTab.label} · {t("RESPONSE LOG")}
                 </span>
-                <h2>Interview records</h2>
+                <h2>{t("Interview records")}</h2>
               </div>
               <label className="table-search">
                 <Search size={15} />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Find an ID, interviewer or status"
-                  aria-label="Search responses"
+                  placeholder={t("Find an ID, interviewer or status")}
+                  aria-label={t("Search responses")}
                   data-testid="input-search-responses"
                 />
               </label>
@@ -525,10 +869,10 @@ export default function Dashboard() {
               <table>
                 <thead>
                   <tr>
-                    <th>INTERVIEW ID</th>
-                    <th>UPDATED</th>
-                    <th>INTERVIEWER</th>
-                    <th>STATUS</th>
+                    <th>{t("INTERVIEW ID")}</th>
+                    <th>{t("UPDATED")}</th>
+                    <th>{t("INTERVIEWER")}</th>
+                    <th>{t("STATUS")}</th>
                     <th />
                   </tr>
                 </thead>
@@ -553,7 +897,7 @@ export default function Dashboard() {
                           <span
                             className={`response-status status-${record.status}`}
                           >
-                            {record.status}
+                            {t(record.status)}
                           </span>
                         </td>
                         <td>
@@ -562,7 +906,7 @@ export default function Dashboard() {
                               event.stopPropagation();
                               setSelected(record);
                             }}
-                            aria-label={`View response ${code}`}
+                            aria-label={`${t("View response")} ${code}`}
                             className="row-open"
                             data-testid={`button-view-${record.id}`}
                           >
@@ -576,15 +920,15 @@ export default function Dashboard() {
                     <tr>
                       <td colSpan={5} className="no-results">
                         {error
-                          ? "Responses could not be loaded."
-                          : `No ${selectedTab.label} responses match “${search}”.`}
+                          ? t("Responses could not be loaded.")
+                          : `${t("No")} ${selectedTab.label} ${t("responses match")} “${search}”.`}
                       </td>
                     </tr>
                   )}
                   {loading && (
                     <tr>
                       <td colSpan={5} className="no-results">
-                        Loading research responses…
+                        {t("Loading research responses…")}
                       </td>
                     </tr>
                   )}
@@ -593,9 +937,9 @@ export default function Dashboard() {
             </div>
             <div className="panel-footer">
               <span>
-                Showing {rows.length} {selectedTab.label} records
+                {t("Showing")} {rows.length} {selectedTab.label} {t("records")}
               </span>
-              <span>Draft and submitted status shown separately</span>
+              <span>{t("Draft and submitted status shown separately")}</span>
             </div>
           </section>
           {selected && (
@@ -606,15 +950,15 @@ export default function Dashboard() {
               <div className="detail-head">
                 <div>
                   <span className="panel-overline">
-                    {selected.status.toUpperCase()} ·{" "}
+                    {t(selected.status.toUpperCase())} ·{" "}
                     {answerText(selected.answers["1"])}
                   </span>
-                  <h2>Interview detail</h2>
+                  <h2>{t("Interview detail")}</h2>
                 </div>
                 <button
                   onClick={() => setSelected(null)}
                   className="close-detail"
-                  aria-label="Close record detail"
+                  aria-label={t("Close record detail")}
                   data-testid="button-close-detail"
                 >
                   <X size={18} />
@@ -626,36 +970,36 @@ export default function Dashboard() {
                   className="button button-primary"
                   data-testid="link-resume-draft"
                 >
-                  Continue draft <ArrowUpRight size={16} />
+                  {t("Continue draft")} <ArrowUpRight size={16} />
                 </Link>
               )}
               <div className="detail-grid">
                 <div>
-                  <span>INTERVIEWER</span>
-                  <strong>{answerText(selected.answers["2"])}</strong>
+                  <span>{t("INTERVIEWER")}</span>
+                  <strong>{answerText(selected.answers["2"], t)}</strong>
                 </div>
                 <div>
-                  <span>INTERVIEW DATE</span>
-                  <strong>{answerText(selected.answers["3"])}</strong>
+                  <span>{t("INTERVIEW DATE")}</span>
+                  <strong>{answerText(selected.answers["3"], t)}</strong>
                 </div>
                 <div>
-                  <span>RESPONDENT PATH</span>
+                  <span>{t("RESPONDENT PATH")}</span>
                   <strong>{selectedTab.label}</strong>
                 </div>
                 <div>
-                  <span>STATUS</span>
-                  <strong>{selected.status}</strong>
+                  <span>{t("STATUS")}</span>
+                  <strong>{t(selected.status)}</strong>
                 </div>
                 <div>
-                  <span>LAST UPDATED</span>
+                  <span>{t("LAST UPDATED")}</span>
                   <strong>{displayDate(selected.updatedAt)}</strong>
                 </div>
                 <div>
-                  <span>SUBMITTED</span>
+                  <span>{t("SUBMITTED")}</span>
                   <strong>
                     {selected.submittedAt
                       ? displayDate(selected.submittedAt)
-                      : "Not submitted"}
+                      : t("Not submitted")}
                   </strong>
                 </div>
               </div>
@@ -663,9 +1007,9 @@ export default function Dashboard() {
                 {detailQuestions.map((question) => (
                   <div className="detail-answer" key={question.n}>
                     <span>
-                      {question.n}. {question.prompt}
+                      {question.n}. {questionText(question.n, question.prompt)}
                     </span>
-                    <p>{answerText(selected.answers[String(question.n)])}</p>
+                    <p>{answerText(selected.answers[String(question.n)], t)}</p>
                   </div>
                 ))}
               </div>
@@ -674,9 +1018,8 @@ export default function Dashboard() {
           <div className="dashboard-bottom-note">
             <FileSpreadsheet size={18} />
             <p>
-              <strong>Workbook contains three worksheets.</strong> The export
-              includes separate CBHI, MINALOC and RSSB sheets and preserves
-              draft/submitted status.
+              <strong>{t("Workbook contains three worksheets.")}</strong>{" "}
+              {t("The export includes separate CBHI, MINALOC and RSSB sheets and preserves draft/submitted status.")}
             </p>
           </div>
         </div>

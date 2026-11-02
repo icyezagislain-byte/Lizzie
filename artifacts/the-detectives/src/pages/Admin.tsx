@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, FileText } from "lucide-react";
 import { SiteHeader } from "@/components/Brand";
+import { useLanguage } from "@/lib/i18n";
 
 export default function Admin() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const [word, setWord] = useState("");
   const [message, setMessage] = useState("");
@@ -45,16 +47,16 @@ export default function Admin() {
       <main className="admin-page">
         <div className="admin-card">
           <Link href="/" className="back-home" data-testid="link-admin-back">
-            <ArrowLeft size={15} /> Back to research
+            <ArrowLeft size={15} /> {t("Back to research")}
           </Link>
           <div className="admin-emblem"><FileText size={23} /></div>
           <p className="eyebrow">
             <span className="eyebrow-line" />
-            RESEARCH RESPONSES
+            {t("RESEARCH RESPONSES")}
           </p>
-          <h1>Research dashboard</h1>
+          <h1>{t("Research dashboard")}</h1>
           <p className="admin-intro">
-            Enter the secret word to browse CBHI, MINALOC, and RSSB interviews and download the workbook.
+            {t("Enter the secret word to browse CBHI, MINALOC, and RSSB interviews and download the workbook.")}
           </p>
                     <div style={{ position: "relative", margin: "12px 0" }}>
             <input
@@ -62,7 +64,7 @@ export default function Admin() {
               value={word}
               onChange={(e) => setWord(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") enter(); }}
-              placeholder="Secret word"
+              placeholder={t("Secret word")}
               autoComplete="off"
               style={{ width: "100%", padding: "12px 46px 12px 12px", borderRadius: 8, border: "1px solid #bbb", fontSize: 16 }}
               data-testid="input-secret-word"
@@ -70,8 +72,8 @@ export default function Admin() {
             <button
               type="button"
               onClick={() => setShow(!show)}
-              aria-label={show ? "Hide secret word" : "Show secret word"}
-              title={show ? "Hide" : "Show"}
+              aria-label={t(show ? "Hide secret word" : "Show secret word")}
+              title={t(show ? "Hide" : "Show")}
               style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 6, display: "flex", color: "#666" }}
               data-testid="button-toggle-word"
             >
@@ -80,16 +82,16 @@ export default function Admin() {
           </div>
           {message && (
             <p role="alert" style={{ color: "#c62828", fontWeight: 600, margin: "0 0 12px" }} data-testid="text-not-allowed">
-              {message}
+              {t(message)}
             </p>
           )}
           <button className="button button-primary admin-submit" onClick={enter} disabled={checking} data-testid="button-open-dashboard">
-            {checking ? "Checking..." : "Open research dashboard"} <ArrowRight size={16} />
+            {checking ? t("Checking...") : t("Open research dashboard")} <ArrowRight size={16} />
           </button>
         </div>
       </main>
       <footer className="minimal-footer">
-        THE DETECTIVES <span>·</span> ISOMO ACADEMY · RWANDA
+        {t("THE DETECTIVES")} <span>·</span> ISOMO ACADEMY · RWANDA
       </footer>
     </div>
   );
